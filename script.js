@@ -29,6 +29,14 @@ function makePageForEpisodes(episodeList) {
 
   const filmCards = episodeList.map(createFilmCard);
   rootElem.append(...filmCards);
+  const attribution = document.createElement("p");
+  const tvMazeLink = document.createElement("a");
+  tvMazeLink.href = "https://tvmaze.com/";
+  tvMazeLink.textContent = "TVMaze.com";
+  attribution.append("Data originally sourced from ", tvMazeLink);
+  const footer = document.createElement("footer");
+  footer.append(attribution);
+  document.body.append(footer);
 }
 
 function createFilmCard(film) {
@@ -37,13 +45,9 @@ function createFilmCard(film) {
   const episodeCode = `S${String(film.season).padStart(2, "0")}E${String(
     film.number,
   ).padStart(2, "0")}`;
-  card.querySelector("h3").textContent = `${film.name}-${episodeCode}`;
+  card.querySelector("h3").textContent = `${film.name} - ${episodeCode}`;
+  card.querySelector("img").src = film.image.medium;
   card.querySelector("summary").innerHTML = film.summary;
-  const image = document.createElement("img");
-  image.src = film.image.medium;
-
-  card.append(image);
   return card;
 }
-
 window.onload = setup;
