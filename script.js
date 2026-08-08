@@ -20,23 +20,30 @@
 //       airtime: "21:00",
 //       airstamp: "2011-04-18T01:00:00+00:00",
 function setup() {
-  const films = getAllEpisodes();
-  console.log(films);
-  makePageForEpisodes(films);
-
+  const allEpisodes = getAllEpisodes();
+  makePageForEpisodes(allEpisodes);
+}
+function makePageForEpisodes(episodeList) {
   const rootElem = document.getElementById("root");
+  //rootElem.textContent = `Got ${episodeList.length} episode(s)`;
 
-  makePageForEpisodes(films, rootElem);
-  const filmCards = films.map(createFilmCard);
+  const filmCards = episodeList.map(createFilmCard);
   rootElem.append(...filmCards);
 }
-function createFilmCard(films) {
+
+function createFilmCard(film) {
   const card = document.getElementById("film-card").content.cloneNode(true);
-  // Now we are querying our cloned fragment, not the entire page.
-  const episodeCode = `S${String(films.season).padStart(2, "0")}E${String(films.number).padStart(2, "0")}`;
-  card.querySelector("h3").textContent = films.name;
-  card.querySelector("episodeCode").textContent = episodeCode;
-  card.querySelector("summary").textContent = films.summary;
+
+  const episodeCode = `S${String(film.season).padStart(2, "0")}E${String(
+    film.number,
+  ).padStart(2, "0")}`;
+  card.querySelector("h3").textContent = `${film.name}-${episodeCode}`;
+  card.querySelector("summary").innerHTML = film.summary;
+  const image = document.createElement("img");
+  image.src = film.image.medium;
+
+  card.append(image);
   return card;
 }
+
 window.onload = setup;
