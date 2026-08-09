@@ -48,6 +48,7 @@ function createFilmCard(film) {
   card.querySelector("h3").textContent = `${film.name} - ${episodeCode}`;
   card.querySelector("img").src = film.image.medium;
   card.querySelector("summary").innerHTML = film.summary;
+  card.querySelector("#episode-image").alt = film.name;
   return card;
 }
 window.onload = setup;
