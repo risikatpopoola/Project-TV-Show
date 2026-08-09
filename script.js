@@ -27,8 +27,8 @@ function makePageForEpisodes(episodeList) {
   const rootElem = document.getElementById("root");
   //rootElem.textContent = `Got ${episodeList.length} episode(s)`;
 
-  const filmCards = episodeList.map(createFilmCard);
-  rootElem.append(...filmCards);
+  const episodeCards = episodeList.map(createEpisodeCard);
+  rootElem.append(...episodeCards);
   const attribution = document.createElement("p");
   const tvMazeLink = document.createElement("a");
   tvMazeLink.href = "https://tvmaze.com/";
@@ -39,16 +39,16 @@ function makePageForEpisodes(episodeList) {
   document.body.append(footer);
 }
 
-function createFilmCard(film) {
-  const card = document.getElementById("film-card").content.cloneNode(true);
+function createEpisodeCard(episode) {
+  const card = document.getElementById("episode-card").content.cloneNode(true);
 
-  const episodeCode = `S${String(film.season).padStart(2, "0")}E${String(
-    film.number,
+  const episodeCode = `S${String(episode.season).padStart(2, "0")}E${String(
+    episode.number
   ).padStart(2, "0")}`;
-  card.querySelector("h3").textContent = `${film.name} - ${episodeCode}`;
-  card.querySelector("img").src = film.image.medium;
-  card.querySelector("summary").innerHTML = film.summary;
-  card.querySelector("#episode-image").alt = film.name;
+  card.querySelector("h3").textContent = `${episode.name} - ${episodeCode}`;
+  card.querySelector("img").src = episode.image.medium;
+  card.querySelector("summary").innerHTML = episode.summary;
+  card.querySelector("#episode-image").alt = episode.name;
   return card;
 }
 window.onload = setup;
