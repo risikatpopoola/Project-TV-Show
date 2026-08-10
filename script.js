@@ -19,24 +19,65 @@
 //       airdate: "2011-04-17",
 //       airtime: "21:00",
 //       airstamp: "2011-04-18T01:00:00+00:00",
+
+const searchInput = document.querySelector("#search-input"); //get elements from HTML
+const episodeCount = document.querySelector("#episode-count");
+
+let allEpisodes = []; //keep allEpisode outside so that search can use it
 function setup() {
-  const allEpisodes = getAllEpisodes();
+  allEpisodes = getAllEpisodes();
   makePageForEpisodes(allEpisodes);
+  makeFooter(); //call makeFooter() outside makePageForEpisodes(episodeList) to display footer
+  //only once
 }
+
+function makeFooter() { //add footer function outside 
+  const attribution = document.createElement("p");
+  const tvMazeLink = document.createElement("a");
+
+  tvMazeLink.href = "https://tvmaze.com/";
+  tvMazeLink.textContent = "TVMaze.com";
+
+  attribution.append("Data originally sourced from ", tvMazeLink);
+
+  const footer = document.createElement("footer");
+  footer.append(attribution);
+
+  document.body.append(footer);
+}
+
+searchInput.addEventListener("input", () => {
+  const searchTerm = searchInput.value;
+
+  const filteredEpisodes = searchEpisodes(searchTerm, allEpisodes);
+
+  makePageForEpisodes(filteredEpisodes);
+});
+
+function searchEpisodes(searchTerm, allEpisodes) { //only filted episodes 
+  const filteredEpisodes = allEpisodes.filter((episode) => {
+    const name = episode.name.toLowerCase();
+    const summary = episode.summary.toLowerCase();
+
+    return name.includes(searchTerm.toLowerCase()) ||
+           summary.includes(searchTerm.toLowerCase());
+  });
+
+  return filteredEpisodes;
+}
+
 function makePageForEpisodes(episodeList) {
   const rootElem = document.getElementById("root");
   //rootElem.textContent = `Got ${episodeList.length} episode(s)`;
 
+  rootElem.innerHTML = ""; //for every search it will add only new cards, not olds + new
+
+  episodeCount.textContent = `${episodeList.length} episodes found`; //shows no. of episodes found 
+  // after each search
+
   const episodeCards = episodeList.map(createEpisodeCard);
   rootElem.append(...episodeCards);
-  const attribution = document.createElement("p");
-  const tvMazeLink = document.createElement("a");
-  tvMazeLink.href = "https://tvmaze.com/";
-  tvMazeLink.textContent = "TVMaze.com";
-  attribution.append("Data originally sourced from ", tvMazeLink);
-  const footer = document.createElement("footer");
-  footer.append(attribution);
-  document.body.append(footer);
+
 }
 
 function createEpisodeCard(episode) {
