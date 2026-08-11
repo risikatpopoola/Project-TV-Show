@@ -12,7 +12,7 @@
 // 3. Combine season number and episode number into an **episode code**:
 //    1. Each part should be zero-padded to two digits.
 //    2. Example: `S02E07` would be the code for the 7th episode of the 2nd season. `S2E7` would be incorrect.
-// 4. Your page should state somewhere that the data has (originally) come from [TVMaze.com](https://tvmaze.com/), and link back to that site (or the specific episode on that site). See [tvmaze.com/api#licensing](https://www.tvmaze.com/api#licensing).
+// 4. Your page should state somewhere that the data has (originally) come from [TVMaze.com]([https://tvmaze.com/](https://tvmaze.com/)), and link back to that site (or the specific episode on that site). See [tvmaze.com/api#licensing]([https://www.tvmaze.com/api#licensing](https://www.tvmaze.com/api#licensing)).
 // name: "Winter is Coming",
 //       season: 1,
 //       number: 1,
@@ -25,41 +25,69 @@ const episodeCount = document.querySelector("#episode-count");
 const episodeSelector = document.querySelector("#episode-selector");
 const showAllButton = document.querySelector("#show-all-button"); //for bonus part
 
-let allEpisodes = []; //keep allEpisode outside so that search can use it
-function setup() {
-  allEpisodes = getAllEpisodes();
-  makePageForEpisodes(allEpisodes);
-  createEpisodeSelector(allEpisodes);
-  makeFooter(); //call makeFooter() outside makePageForEpisodes(episodeList) to display footer
-  //only once
-}
+let allEpisodes = [];
+
+async function setup() {
+  const url = "https://api.tvmaze.com/shows/82/episodes";
+
+  try {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+
+    allEpisodes = await response.json();
+
+    console.log(allEpisodes);
+
+    makePageForEpisodes(allEpisodes);
+    createEpisodeSelector(allEpisodes);
+    makeFooter();
+  } catch (error) {
+    console.error(error.message);
+    const rootElem = document.getElementById("root");
+    rootElem.textContent =
+      "Sorry, we couldn't load the episodes. Please try again.";
+  }
+} //call makeFooter() outside makePageForEpisodes(allEpisodes) to display footer
+//only once
 
 function createEpisodeSelector(episodeList) {
+  //console.log(episodeList); used for debugging
   // for creating episode selector
   for (const episode of episodeList) {
     //loop through each episode
     const optionElement = document.createElement("option"); //create option for each element
+
     const episodeCode = `S${String(episode.season).padStart(2, "0")}E${String(
-      episode.number // create episode code
+      episode.number, // create episode code
     ).padStart(2, "0")}`;
+
     optionElement.textContent = `${episodeCode} - ${episode.name}`; // create option text
+
     optionElement.value = episode.id; //The value of this option should be this episode's ID, suppose
     //for 1st episode, value is it's id = 4952
+
     episodeSelector.append(optionElement); //put the option just created in to the episode selector
   }
 }
+
 episodeSelector.addEventListener("change", function (event) {
   const selectedEpisodeID = event.target.value; // gets the selected episode's ID
+
   const selectedEpisode = allEpisodes.find(
     (
-      episode //find() searches through allEpisodes
-    ) => episode.id === Number(selectedEpisodeID) // It finds the episode where the IDs match.
+      episode, //find() searches through allEpisodes
+    ) => episode.id === Number(selectedEpisodeID), // It finds the episode where the IDs match.
     //selectedEpisode now contains the whole episode object
   );
+
   const selectedCard = document.getElementById(
     //find episode section
-    `episode-${selectedEpisode.id}`
+    `episode-${selectedEpisode.id}`,
   );
+
   const allCards = document.querySelectorAll("#root section"); //Find all the episode <section> cards inside #root
   // and store them in allCards
 
@@ -70,16 +98,17 @@ episodeSelector.addEventListener("change", function (event) {
   });
 
   selectedCard.style.display = "block";
-  selectedCard.scrollIntoView(); // Page jumps to the selected episode
+
+  const selectedEpisodes = [selectedEpisode];
+
+  episodeCount.textContent = `Displaying ${selectedEpisodes.length}/${allEpisodes.length} episodes`;
+
+  //selectedCard.scrollIntoView(); // Page jumps to the selected episode
 });
 
 showAllButton.addEventListener("click", function () {
   //make the "Show All Episodes" button work
-  const allCards = document.querySelectorAll("#root section");
-
-  allCards.forEach(function (card) {
-    card.style.display = "block";
-  });
+  makePageForEpisodes(allEpisodes, allEpisodes);
 });
 
 function makeFooter() {
@@ -98,12 +127,11 @@ function makeFooter() {
   document.body.append(footer);
 }
 
-searchInput.addEventListener("input", () => {
+searchInput.addEventListener("input", function () {
   const searchTerm = searchInput.value;
 
-  const filteredEpisodes = searchEpisodes(searchTerm, allEpisodes);
-
-  makePageForEpisodes(filteredEpisodes);
+  const matchingEpisodes = searchEpisodes(searchTerm, allEpisodes);
+  makePageForEpisodes(matchingEpisodes, allEpisodes);
 });
 
 function searchEpisodes(searchTerm, allEpisodes) {
@@ -124,12 +152,13 @@ function searchEpisodes(searchTerm, allEpisodes) {
 function makePageForEpisodes(episodeList) {
   const rootElem = document.getElementById("root");
   //rootElem.textContent = `Got ${episodeList.length} episode(s)`;
-
   rootElem.innerHTML = ""; //for every search it will add only new cards, not olds + new
 
-  episodeCount.textContent = `${episodeList.length} episodes found`; //shows no. of episodes found
+  episodeCount.textContent = `Displaying ${episodeList.length}/${allEpisodes.length} episodes`; //shows no. of episodes found
   // after each search
-
+  if (episodeList.length === 0) {
+    rootElem.innerHTML = "Sorry, no episode matched your search...";
+  }
   const episodeCards = episodeList.map(createEpisodeCard);
   rootElem.append(...episodeCards);
 }
@@ -138,13 +167,20 @@ function createEpisodeCard(episode) {
   const card = document.getElementById("episode-card").content.cloneNode(true);
 
   const episodeCode = `S${String(episode.season).padStart(2, "0")}E${String(
-    episode.number
+    episode.number,
   ).padStart(2, "0")}`;
+
   card.querySelector("h3").textContent = `${episode.name} - ${episodeCode}`;
+
   card.querySelector("img").src = episode.image.medium;
-  card.querySelector("summary").innerHTML = episode.summary;
+
+  card.querySelector("summary").innerHTML = episode.summary || "";
+
   card.querySelector("#episode-image").alt = episode.name;
+
   card.querySelector("section").id = `episode-${episode.id}`;
+
   return card;
 }
+
 window.onload = setup;
