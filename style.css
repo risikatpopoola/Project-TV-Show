@@ -8,8 +8,6 @@
   --font: 100%/1.5 system-ui;
 }
 
-/*Base Elements*/
-
 body {
   background: var(--dark);
   color: var(--cream-pink);
@@ -18,16 +16,12 @@ body {
   padding: 30px;
 }
 
-/* Episode Layout*/
-
 #root {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 25px;
   padding: 20px;
 }
-
-/* Episode Cards */
 
 section {
   background: var(--cream-pink);
@@ -39,16 +33,12 @@ section {
   box-shadow: 0 5px 12px rgba(0, 0, 0, 0.3);
 }
 
-/*Episode Title */
-
 h3 {
   text-align: center;
   color: var(--dark);
   margin-top: 0;
   margin-bottom: 10px;
 }
-
-/*Episode Code */
 
 episodeCode {
   display: block;
@@ -58,13 +48,9 @@ episodeCode {
   margin-bottom: 15px;
 }
 
-/*Summary*/
-
 summary {
   color: var(--dark);
 }
-
-/*Episode Image  */
 
 img {
   display: block;
@@ -84,4 +70,10 @@ footer {
 
 footer a {
   color: #f1e3e4;
+}
+#search-input {
+  background-color: var(--mauve);
+}
+#search-input::placeholder {
+  color: var(--dark);
 }
