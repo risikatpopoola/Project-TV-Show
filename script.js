@@ -38,9 +38,6 @@ async function setup() {
     }
 
     allEpisodes = await response.json();
-
-    console.log(allEpisodes);
-
     makePageForEpisodes(allEpisodes);
     createEpisodeSelector(allEpisodes);
     makeFooter();
