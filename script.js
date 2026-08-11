@@ -25,17 +25,36 @@ const episodeCount = document.querySelector("#episode-count");
 const episodeSelector = document.querySelector("#episode-selector");
 const showAllButton = document.querySelector("#show-all-button"); //for bonus part
 
-let allEpisodes = []; //keep allEpisode outside so that search can use it
+let allEpisodes = [];
 
-function setup() {
-  allEpisodes = getAllEpisodes();
-  makePageForEpisodes(allEpisodes, allEpisodes);
-  createEpisodeSelector(allEpisodes);
-  makeFooter(); //call makeFooter() outside makePageForEpisodes(episodeList) to display footer
-  //only once
-}
+async function setup() {
+  const url = "https://api.tvmaze.com/shows/82/episodes";
+
+  try {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+
+    allEpisodes = await response.json();
+
+    console.log(allEpisodes);
+
+    makePageForEpisodes(allEpisodes);
+    createEpisodeSelector(allEpisodes);
+    makeFooter();
+  } catch (error) {
+    console.error(error.message);
+    const rootElem = document.getElementById("root");
+    rootElem.textContent =
+      "Sorry, we couldn't load the episodes. Please try again.";
+  }
+} //call makeFooter() outside makePageForEpisodes(allEpisodes) to display footer
+//only once
 
 function createEpisodeSelector(episodeList) {
+  //console.log(episodeList); used for debugging
   // for creating episode selector
   for (const episode of episodeList) {
     //loop through each episode
@@ -112,7 +131,6 @@ searchInput.addEventListener("input", function () {
   const searchTerm = searchInput.value;
 
   const matchingEpisodes = searchEpisodes(searchTerm, allEpisodes);
-
   makePageForEpisodes(matchingEpisodes, allEpisodes);
 });
 
@@ -131,15 +149,16 @@ function searchEpisodes(searchTerm, allEpisodes) {
   return filteredEpisodes;
 }
 
-function makePageForEpisodes(episodeList, allEpisodes) {
+function makePageForEpisodes(episodeList) {
   const rootElem = document.getElementById("root");
   //rootElem.textContent = `Got ${episodeList.length} episode(s)`;
-
   rootElem.innerHTML = ""; //for every search it will add only new cards, not olds + new
 
   episodeCount.textContent = `Displaying ${episodeList.length}/${allEpisodes.length} episodes`; //shows no. of episodes found
   // after each search
-
+  if (episodeList.length === 0) {
+    rootElem.innerHTML = "Sorry, no episode matched your search...";
+  }
   const episodeCards = episodeList.map(createEpisodeCard);
   rootElem.append(...episodeCards);
 }
@@ -155,7 +174,7 @@ function createEpisodeCard(episode) {
 
   card.querySelector("img").src = episode.image.medium;
 
-  card.querySelector("summary").innerHTML = episode.summary;
+  card.querySelector("summary").innerHTML = episode.summary || "";
 
   card.querySelector("#episode-image").alt = episode.name;
 
