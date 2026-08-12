@@ -29,6 +29,8 @@ let allEpisodes = [];
 
 async function setup() {
   const url = "https://api.tvmaze.com/shows/82/episodes";
+  const rootElem = document.getElementById("root"); //shows this message when episode data is loading
+  rootElem.textContent = "Loading episodes...";
 
   try {
     const response = await fetch(url);
@@ -46,7 +48,6 @@ async function setup() {
     makeFooter();
   } catch (error) {
     console.error(error.message);
-    const rootElem = document.getElementById("root");
     rootElem.textContent =
       "Sorry, we couldn't load the episodes. Please try again.";
   }
@@ -131,6 +132,7 @@ searchInput.addEventListener("input", function () {
   const searchTerm = searchInput.value;
 
   const matchingEpisodes = searchEpisodes(searchTerm, allEpisodes);
+  
   makePageForEpisodes(matchingEpisodes, allEpisodes);
 });
 
