@@ -20,42 +20,112 @@
 //       airtime: "21:00",
 //       airstamp: "2011-04-18T01:00:00+00:00",
 
+const rootElem = document.getElementById("root");
+
 const searchInput = document.querySelector("#search-input"); //get elements from HTML
 const episodeCount = document.querySelector("#episode-count");
 const episodeSelector = document.querySelector("#episode-selector");
 const showAllButton = document.querySelector("#show-all-button"); //for bonus part
+const showSelector = document.querySelector("#show-selector"); //for show select
+ 
 
 let allEpisodes = [];
+let cachedEpisodes = {}; //this variable stores episodes that we already fetched
 
+// ==================== SHOW SELECTOR ====================
+// When the user selects a different show, load and display the episodes for that show
+showSelector.addEventListener("change", function () {
+
+  const selectedShowId = showSelector.value; //selectedShowID will store the selected show ID
+  loadEpisodes(selectedShowId); 
+});
+
+// ==================== SETUP ====================
+// setup () for Runs once when the page loads
 async function setup() {
-  const url = "https://api.tvmaze.com/shows/82/episodes";
-  const rootElem = document.getElementById("root"); //shows this message when episode data is loading
-  rootElem.textContent = "Loading episodes...";
+  const allShowUrl = "https://api.tvmaze.com/shows";
+   
+  rootElem.textContent = "Loading episodes..."; //shows this message when episode data is loading
 
+  //fetch for all shows
   try {
-    const response = await fetch(url);
+    const response = await fetch(allShowUrl);
+
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+
+    const allShows = await response.json(); 
+    allShows.sort((show1, show2) => { //sorting show name alphabetically, ignoring case
+      if(show1.name.toLowerCase() > show2.name.toLowerCase()){
+      return 1;
+      }
+    else if(show1.name.toLowerCase() < show2.name.toLowerCase()){
+      return -1;
+    }
+    return 0;
+});
+    createShowSelector(allShows); // create the show dropdown
+    showSelector.value = allShows[0].id; //dropdown's first selected value matches the first show's ID
+    loadEpisodes(allShows[0].id);  // load episodes for the first show
+
+  } catch (error) {
+    console.error(error.message);
+    rootElem.textContent =
+      "Sorry, we couldn't load the shows. Please try again.";
+  }
+  makeFooter(); //add footer only once
+} 
+
+
+// ==================== LOAD EPISODES ====================
+// matches the selected show to its episodes
+async function loadEpisodes(showId){
+  const showUrl = `https://api.tvmaze.com/shows/${showId}/episodes`;
+
+  if(cachedEpisodes[showId]){ //episodes for this show are already saved in cachedEpisodes
+    allEpisodes = cachedEpisodes[showId]; //put those saved episodes into allEpisodes
+  }
+ else{ //if not saved in cachedEpisodes, then fetch
+//fetch for all episodes
+  try {
+    
+    const response = await fetch(showUrl);
 
     if (!response.ok) {
       throw new Error(`Response status: ${response.status}`);
     }
 
     allEpisodes = await response.json();
-
-    console.log(allEpisodes);
-
-    makePageForEpisodes(allEpisodes);
-    createEpisodeSelector(allEpisodes);
-    makeFooter();
+    cachedEpisodes[showId] = allEpisodes; //save the fetched episodes for this show so we don't fetch them again
+    
   } catch (error) {
     console.error(error.message);
     rootElem.textContent =
       "Sorry, we couldn't load the episodes. Please try again.";
+      return;
   }
-} //call makeFooter() outside makePageForEpisodes(allEpisodes) to display footer
-//only once
+  }
+   // display episodes and update the episode dropdown
+  makePageForEpisodes(allEpisodes);
+ createEpisodeSelector(allEpisodes);
+}
 
+// ==================== CREATE SHOW SELECTOR ====================
+function createShowSelector(showList) {
+    for (const show of showList) {
+      //loop through each show
+        const optionElement = document.createElement("option"); //create option for each element
+        optionElement.textContent = show.name; //create show name
+        optionElement.value = show.id; //create show id
+         showSelector.append(optionElement); //put the option just created in to the show selector
+    }
+}
+
+// ==================== CREATE EPISODE SELECTOR ====================
 function createEpisodeSelector(episodeList) {
-  //console.log(episodeList); used for debugging
+
+  episodeSelector.innerHTML = ""; //clear old episodes, only shows episodes for new show
   // for creating episode selector
   for (const episode of episodeList) {
     //loop through each episode
@@ -74,6 +144,7 @@ function createEpisodeSelector(episodeList) {
   }
 }
 
+// ==================== EPISODE SELECTOR ====================
 episodeSelector.addEventListener("change", function (event) {
   const selectedEpisodeID = event.target.value; // gets the selected episode's ID
 
@@ -98,42 +169,27 @@ episodeSelector.addEventListener("change", function (event) {
     card.style.display = "none";
   });
 
+  //show only the selected episode
   selectedCard.style.display = "block";
 
   const selectedEpisodes = [selectedEpisode];
 
   episodeCount.textContent = `Displaying ${selectedEpisodes.length}/${allEpisodes.length} episodes`;
 
-  //selectedCard.scrollIntoView(); // Page jumps to the selected episode
 });
 
+// ==================== SHOW ALL ====================
 showAllButton.addEventListener("click", function () {
   //make the "Show All Episodes" button work
-  makePageForEpisodes(allEpisodes, allEpisodes);
+  makePageForEpisodes(allEpisodes);
 });
 
-function makeFooter() {
-  //add footer function outside
-  const attribution = document.createElement("p");
-  const tvMazeLink = document.createElement("a");
-
-  tvMazeLink.href = "https://tvmaze.com/";
-  tvMazeLink.textContent = "TVMaze.com";
-
-  attribution.append("Data originally sourced from ", tvMazeLink);
-
-  const footer = document.createElement("footer");
-  footer.append(attribution);
-
-  document.body.append(footer);
-}
-
+// ==================== SEARCH ====================
 searchInput.addEventListener("input", function () {
   const searchTerm = searchInput.value;
-
   const matchingEpisodes = searchEpisodes(searchTerm, allEpisodes);
   
-  makePageForEpisodes(matchingEpisodes, allEpisodes);
+  makePageForEpisodes(matchingEpisodes);
 });
 
 function searchEpisodes(searchTerm, allEpisodes) {
@@ -151,7 +207,9 @@ function searchEpisodes(searchTerm, allEpisodes) {
   return filteredEpisodes;
 }
 
+// ==================== DISPLAY EPISODES ====================
 function makePageForEpisodes(episodeList) {
+  
   const rootElem = document.getElementById("root");
   //rootElem.textContent = `Got ${episodeList.length} episode(s)`;
   rootElem.innerHTML = ""; //for every search it will add only new cards, not olds + new
@@ -165,6 +223,7 @@ function makePageForEpisodes(episodeList) {
   rootElem.append(...episodeCards);
 }
 
+// ==================== CREATE EPISODE CARD ====================
 function createEpisodeCard(episode) {
   const card = document.getElementById("episode-card").content.cloneNode(true);
 
@@ -183,6 +242,23 @@ function createEpisodeCard(episode) {
   card.querySelector("section").id = `episode-${episode.id}`;
 
   return card;
+}
+
+// ==================== FOOTER ====================
+function makeFooter() {
+  //add footer function outside
+  const attribution = document.createElement("p");
+  const tvMazeLink = document.createElement("a");
+
+  tvMazeLink.href = "https://tvmaze.com/";
+  tvMazeLink.textContent = "TVMaze.com";
+
+  attribution.append("Data originally sourced from ", tvMazeLink);
+
+  const footer = document.createElement("footer");
+  footer.append(attribution);
+
+  document.body.append(footer);
 }
 
 window.onload = setup;
