@@ -109,7 +109,8 @@ img {
 }
 
 /* Show All Episodes button */
-#show-all-button {
+#show-all-button,
+#back-to-shows {
   background-color: var(--cream-pink);
   color: var(--dark);
   border: 2px solid var(--purple);
